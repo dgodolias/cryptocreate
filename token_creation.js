@@ -88,7 +88,7 @@ const PRIVATE_KEY = Uint8Array.from([
     ],
     PROGRAM_ID
   );
-  let uri = "https://api.jsonbin.io/v3/qs/67556a99e41b4d34e461cf88";
+  let uri = "https://raw.githubusercontent.com/dgodolias/cryptocreate/refs/heads/main/token_metadata.json";
   let info;
 
   try {
