@@ -65,7 +65,7 @@ const PRIVATE_KEY = Uint8Array.from([
   );
 
   // Mint tokens to the recipient's token account
-  const amount = 1000 * 10 ** decimals; // Adjust the amount as needed
+  const amount = 8 * 10 ** decimals; // Adjust the amount as needed
   await mintTo(
     connection,
     payer,
@@ -80,7 +80,7 @@ const PRIVATE_KEY = Uint8Array.from([
   );
 
   // Create metadata for the token
-  const metadataPDA = await PublicKey.findProgramAddress(
+  const metadataPDA = await PublicKey.findProgramAddressSync(
     [
       Buffer.from('metadata'),
       PROGRAM_ID.toBuffer(),
@@ -88,52 +88,58 @@ const PRIVATE_KEY = Uint8Array.from([
     ],
     PROGRAM_ID
   );
-
-  const metadataData = {
-    name: "My Token Name",
-    symbol: "MTK",
-    uri: "https://raw.githubusercontent.com/dgodolias/cryptocreate/refs/heads/main/token_metadata.json?token=GHSAT0AAAAAAC27WSRAREQRXVIVSF6CANL4Z2UMMAA", // Replace with your metadata URI
-    sellerFeeBasisPoints: 0,
-    creators: null,
-  };
-
-  try {
-    const metadataInstruction = createCreateMetadataAccountV3Instruction(
-      {
-        metadata: metadataPDA[0],
-        mint: mint,
-        mintAuthority: mintAuthority.publicKey,
-        payer: payer.publicKey,
-        updateAuthority: mintAuthority.publicKey,
-      },
-      {
-        createMetadataAccountArgsV3: {
-          data: {
-            name: metadataData.name,
-            symbol: metadataData.symbol,
-            uri: metadataData.uri,
-            sellerFeeBasisPoints: metadataData.sellerFeeBasisPoints,
-            creators: metadataData.creators,
-            collection: null,
-            uses: null,
-          },
-          isMutable: true,
-          collectionDetails: null,
-        },
+        let uri = "https://raw.githubusercontent.com/dgodolias/cryptocreate/refs/heads/main/token_metadata.json";
+    let info;
+    
+    try {
+      const response = await fetch(uri);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-    );
-
-    const transaction = new Transaction().add(metadataInstruction);
-    const signature = await sendAndConfirmTransaction(
-      connection,
-      transaction,
-      [payer, mintAuthority],
-      {commitment: 'confirmed'}
-    );
-
-    console.log("Metadata created for token. Signature:", signature);
-  } catch (error) {
-    console.error("Error creating metadata:", error);
-    throw error;
-  }
+      info = await response.json();
+      console.log("Fetched metadata:", info);
+    
+      try {
+        const metadataInstruction = createCreateMetadataAccountV3Instruction(
+          {
+            metadata: metadataPDA[0],
+            mint: mint,
+            mintAuthority: mintAuthority.publicKey,
+            payer: payer.publicKey,
+            updateAuthority: mintAuthority.publicKey,
+          },
+          {
+            createMetadataAccountArgsV3: {
+              data: {
+                name: info.name,
+                symbol: info.symbol,
+                uri: uri,
+                sellerFeeBasisPoints: 0,
+                creators: null,
+                collection: null,
+                uses: null,
+              },
+              isMutable: true,
+              collectionDetails: null,
+            },
+          }
+        );
+    
+        const transaction = new Transaction().add(metadataInstruction);
+        const signature = await sendAndConfirmTransaction(
+          connection,
+          transaction,
+          [payer, mintAuthority],
+          {commitment: 'confirmed'}
+        );
+    
+        console.log("Metadata created for token. Signature:", signature);
+      } catch (error) {
+        console.error("Error creating metadata:", error);
+        throw error;
+      }
+    } catch (error) {
+      console.error("Error fetching metadata:", error);
+      throw error;
+    }
 })();
