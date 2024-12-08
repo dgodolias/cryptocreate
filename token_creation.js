@@ -65,7 +65,7 @@ const PRIVATE_KEY = Uint8Array.from([
   );
 
   // Mint tokens to the recipient's token account
-  const amount = 79000 * 10 ** decimals; // Adjust the amount as needed
+  const amount = 709000 * 10 ** decimals; // Adjust the amount as needed
   await mintTo(
     connection,
     payer,
@@ -96,9 +96,8 @@ const PRIVATE_KEY = Uint8Array.from([
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    const data = await response.json();
-    info = data.record; // Use the record field
-    console.log("Fetched metadata:", info);
+    info = await response.json();
+      console.log("Fetched metadata:", info);
 
     try {
       const metadataInstruction = createCreateMetadataAccountV3Instruction(
