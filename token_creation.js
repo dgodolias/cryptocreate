@@ -12,13 +12,33 @@ const {
   PROGRAM_ID,
 } = require('@metaplex-foundation/mpl-token-metadata');
 
-// Correct private key: Ensure this is 64 bytes
-const PRIVATE_KEY = Uint8Array.from([
-  58, 186, 198, 199, 41, 163, 126, 87, 52, 68, 1, 237, 221, 182, 217, 93,
-  10, 65, 8, 161, 135, 111, 250, 212, 228, 237, 248, 14, 61, 151, 121, 85,
-  100, 201, 48, 102, 48, 12, 150, 56, 194, 223, 133, 171, 75, 152, 191, 145,
-  213, 133, 82, 163, 164, 8, 197, 182, 251, 46, 39, 94, 199, 254, 154, 166,
-]);
+const fs = require('fs');
+const path = require('path');
+
+// Function to read private key from file
+function readPrivateKeyFromFile(filename) {
+  try {
+    const privateKeyText = fs.readFileSync(path.join(__dirname, filename), 'utf8');
+    // Remove brackets, newlines, and extra spaces, then split by comma
+    const privateKeyArray = privateKeyText
+      .replace(/[\[\]\n\s]/g, '') // Remove brackets, newlines, and whitespace
+      .split(',')
+      .map(num => parseInt(num.trim()))
+      .filter(num => !isNaN(num));
+    
+    if (privateKeyArray.length !== 64) {
+      throw new Error('Private key must be exactly 64 bytes');
+    }
+    
+    return Uint8Array.from(privateKeyArray);
+  } catch (error) {
+    console.error('Error reading private key:', error);
+    process.exit(1);
+  }
+}
+
+// Use the function to read the private key
+const PRIVATE_KEY = readPrivateKeyFromFile('private_key.txt');
 
 (async () => {
   // Connect to the devnet
@@ -26,10 +46,6 @@ const PRIVATE_KEY = Uint8Array.from([
 
   // Load the pre-funded payer wallet
   const payer = Keypair.fromSecretKey(PRIVATE_KEY);
-  console.log("Using pre-funded wallet:", payer.publicKey.toString());
-
-  // Skip airdrop since the wallet is already funded
-  console.log("Skipping airdrop since payer is already funded.");
 
   // Generate a new keypair for the mint authority
   const mintAuthority = Keypair.generate();
@@ -65,7 +81,7 @@ const PRIVATE_KEY = Uint8Array.from([
   );
 
   // Mint tokens to the recipient's token account
-  const amount = 709000 * 10 ** decimals; // Adjust the amount as needed
+  const amount = 809000 * 10 ** decimals; // Adjust the amount as needed
   await mintTo(
     connection,
     payer,
